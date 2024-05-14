@@ -1,15 +1,34 @@
 import socket
-import picamera
-import io
+import cv2
 
 def capture_rgb():
-    # Initialize the camera
-    with picamera.PiCamera() as camera:
-        # Capture an image into a stream
-        stream = io.BytesIO()
-        camera.capture(stream, format='rgb')
-        # Return the RGB value
-        return stream.getvalue()
+    # Initialize the USB camera
+    cap = cv2.VideoCapture(0)
+
+    # Check if the camera is opened successfully
+    if not cap.isOpened():
+        print("Error: Unable to open camera.")
+        return None
+
+    # Capture a frame from the camera
+    ret, frame = cap.read()
+
+    # Check if the frame is captured successfully
+    if not ret:
+        print("Error: Unable to capture frame.")
+        return None
+
+    # Resize the frame to the desired dimensions
+    frame = cv2.resize(frame, (320, 240))
+
+    # Release the camera
+    cap.release()
+
+    # Convert BGR to RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Return the RGB frame
+    return rgb_frame
 
 def main():
     # Set up the socket
@@ -33,8 +52,9 @@ def main():
 
                 if data.decode() == 'get_rgb':
                     # Send RGB data to client
-                    rgb_value = capture_rgb()
-                    client_socket.sendall(rgb_value)
+                    rgb_frame = capture_rgb()
+                    if rgb_frame is not None:
+                        client_socket.sendall(rgb_frame.tobytes())
         except Exception as e:
             print(f"Error: {e}")
         finally:
