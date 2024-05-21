@@ -9,15 +9,13 @@ import adafruit_dht
 import board
 
 
-async def update_values(temperature_var, humidity_var):
-    dhtDevice = adafruit_dht.DHT22(board.D4, use_pulseio=False)
-
+async def update_values(temperature_var, humidity_var, dhtDevice):
     temperature_c = dhtDevice.temperature
     humidity = dhtDevice.humidity
 
     # Update node values
-    await temperature_c.write_value(ua.DataValue(temperature_c))
-    await humidity.write_value(ua.DataValue(humidity))
+    await temperature_var.write_value(ua.DataValue(temperature_c))
+    await humidity_var.write_value(ua.DataValue(humidity))
 
     print("Temperature: {:.2f} C, Humidity: {:.2f}%".format(temperature_c, humidity))
 
@@ -52,7 +50,7 @@ async def opc_ua_server():
     await humidity.set_writable()
 
     
-
+    dhtDevice = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     print("Starting OPC UA server at " + url)
 
     # Serve clients and update values periodically
